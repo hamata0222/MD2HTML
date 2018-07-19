@@ -47,6 +47,7 @@ def pre_process(input_file_name):
     tag_close = '</code></pre>'
     temp_file = open('temp.md', 'w')
     open_flg = False
+    inner_label_pattern = re.compile(r'\[(.*?)\]\(:[ \t]*\)')
     
     input_file = open(input_file_name)
     
@@ -63,6 +64,10 @@ def pre_process(input_file_name):
                     pre_tag = tag_open_with_title_head
                     line = re.sub('$', tag_open_with_title_tail, line) # convert the last character (before new-line code) to tag_open_with_title_tail
             line = line.replace('```', pre_tag)
+        if not open_flg:
+            # if the line is in <pre> tag, do not replace a inner label.
+            if inner_label_pattern.search(line):
+                line = inner_label_pattern.sub(r'<a name="\1">\1</a>', line)
         temp_file.write(line)
     temp_file.close()
     input_file.close()
@@ -105,6 +110,7 @@ def find_encoding(input_file_name):
             fix_encoding = check_encoding
         except UnicodeDecodeError:
             pass
+    input_file.close()
     
     # if the encoding is not found in defined encodings, raise Exception
     if fix_encoding is None:
